@@ -1,3 +1,4 @@
+#Author: Zedaine McDonald
 from flask import Flask, jsonify, request
 import mysql.connector
 from typing import Dict
