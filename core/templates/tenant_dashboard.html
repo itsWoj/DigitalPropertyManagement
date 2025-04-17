@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tenant Dashboard</title>
+</head>
+<body>
+    <h1>Welcome, {{ user.username }}</h1>
+    <h2>Your Maintenance Requests</h2>
+    <ul>
+        {% for req in requests %}
+            <li>
+                [{{ req.submitted_at|date:"Y-m-d H:i" }}] {{ req.req_type }} - {{ req.status }}
+            </li>
+        {% empty %}
+            <li>No maintenance requests yet.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
