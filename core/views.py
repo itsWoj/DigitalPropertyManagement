@@ -49,16 +49,4 @@ def tenant_dashboard(request):
     })
 
 def tenant_login_view(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None:
-            login(request, user)
-            return redirect('tenant_dashboard')  # use your dashboard URL name
-        else:
-            messages.error(request, "Invalid credentials")
-            return redirect('tenant_login')  # use your login URL name
-
-    return render(request, 'tenant_login.html')  # login form
+    return render(request, 'tenant_login.html')
