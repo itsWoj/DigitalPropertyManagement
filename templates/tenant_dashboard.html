@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ tenant_name }}'s Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .request-form { background: #f5f5f5; padding: 20px; border-radius: 5px; margin-bottom: 30px; }
+        .request-list { margin-top: 30px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+    <h1>Welcome, {{ tenant_name }}!</h1>
+    <a href="/logout" style="float: right;">Logout</a>
+    
+    <div class="request-form">
+        <h2>New Maintenance Request</h2>
+        <form action="/create_request" method="post">
+            <label>
+                Issue Type:
+                <select name="skillset" required>
+                    <option value="Plumbing">Plumbing</option>
+                    <option value="Electrical">Electrical</option>
+                    <option value="HVAC">HVAC</option>
+                </select>
+            </label>
+            
+            <label>
+                Zone:
+                <select name="zone" required>
+                    <option value="Uptown">Uptown</option>
+                    <option value="Downtown">Downtown</option>
+                    <option value="Crossroad">Crossroad</option>
+                    <option value="Zone A">Zone A</option>
+                    <option value="BackRoad">BackRoad</option>
+                </select>
+            </label>
+            
+            <label>
+                Urgency:
+                <select name="urgency" required>
+                    <option value="1">Low</option>
+                    <option value="2">Medium</option>
+                    <option value="3">High</option>
+                </select>
+            </label>
+            
+            <label>
+                Description:
+                <textarea name="description" required style="width: 100%; height: 100px;"></textarea>
+            </label>
+            
+            <button type="submit">Submit Request</button>
+        </form>
+    </div>
+    
+    <div class="request-list">
+        <h2>Your Maintenance Requests</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Description</th>
+                    <th>Status</th>
+                    <th>Assigned To</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for req in requests %}
+                <tr>
+                    <td>{{ req.RequestID }}</td>
+                    <td>{{ req.Description }}</td>
+                    <td>{{ req.Status }}</td>
+                    <td>
+                        {% if req.TechnicianID %}
+                            Technician {{ req.TechnicianID }}
+                        {% else %}
+                            Pending
+                        {% endif %}
+                    </td>
+                    <td>{{ req.CreatedAt.strftime('%Y-%m-%d') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

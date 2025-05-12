@@ -5,9 +5,13 @@ from flask import Flask, jsonify, request, Response
 import mysql.connector
 from mysql.connector import Error
 from typing import Dict
-from Helper import get_connection, is_valid_email, generate_password
 from datetime import datetime
 from werkzeug.utils import secure_filename
+from flask import Flask, jsonify
+from db import get_technicians, get_maintenance_request
+from assign_technician import assign_technician
+from flask import Flask, jsonify
+from Helper import get_connection, is_valid_email, generate_password
 
 
 app = Flask(__name__)
@@ -1555,6 +1559,34 @@ def list_invoices():
         if conn.is_connected():
             cursor.close()
             conn.close()
+
+@app.route('/assign_technician', methods=['GET'])
+def assign_technician_api():
+    technicians = get_technicians()
+    maintenance_request = get_maintenance_request()
+    
+    assigned_technician = assign_technician(technicians, maintenance_request)
+    
+    return jsonify({
+        'Assigned Technician': assigned_technician.name,
+        'Technician Skillset': assigned_technician.skillset,
+        'Technician Zone': assigned_technician.zone
+    })
+
+
+@app.route('/test', methods=['GET'])
+def test():
+    # Test the imported functions
+    connection = get_connection()  # Get the database connection
+    email = "test@example.com"
+    valid_email = is_valid_email(email)  # Validate email format
+    password = generate_password()  # Generate a random password
+    
+    return jsonify({
+        'Connection': 'Connected' if connection else 'Failed to connect',
+        'Valid Email': valid_email,
+        'Generated Password': password
+    })
 
 
 if __name__ == '__main__':
