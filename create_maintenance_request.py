@@ -38,7 +38,6 @@ def get_available_technicians(cursor, skillset, zone):
     technicians = cursor.fetchall()
     
     if not technicians:
-        # Fallback to any available technician with matching skillset
         cursor.execute("""
             SELECT t.*, u.FirstName, u.LastName
             FROM Technicians t
@@ -59,9 +58,8 @@ def assign_technician(cursor, request):
     )
     
     if not technicians:
-        return None, 0  # No available technicians
+        return None, 0 
     
-    # Score and select best technician
     best_tech = max(
         technicians,
         key=lambda tech: calculate_assignment_score(tech, request)
@@ -81,7 +79,6 @@ def create_maintenance_request(tenant_id, skillset, description, zone, urgency):
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # Validate tenant exists
         if not validate_tenant(cursor, tenant_id):
             raise ValueError(f"Tenant {tenant_id} does not exist")
         
@@ -92,12 +89,10 @@ def create_maintenance_request(tenant_id, skillset, description, zone, urgency):
             'Urgency': urgency
         }
         
-        # Assign technician
         tech_id, score = assign_technician(cursor, request_data)
         if not tech_id:
             raise Exception("No available technicians matching the requirements")
         
-        # Create request
         cursor.execute("""
             INSERT INTO MaintenanceRequests (
                 TenantID, Skillset, Description, Zone, Urgency,
@@ -109,14 +104,12 @@ def create_maintenance_request(tenant_id, skillset, description, zone, urgency):
             tech_id, score, datetime.now()
         ))
         
-        # Update technician status
         cursor.execute("""
             UPDATE Technicians 
             SET Status = 'Busy' 
             WHERE TechnicianID = %s
         """, (tech_id,))
         
-        # Get created request
         cursor.execute("""
             SELECT r.*, u.FirstName, u.LastName
             FROM MaintenanceRequests r
@@ -138,8 +131,6 @@ def create_maintenance_request(tenant_id, skillset, description, zone, urgency):
 
 if __name__ == "__main__":
     try:
-        # First get a valid tenant ID from your database
-        # Example: Get first tenant from database
         conn = mysql.connector.connect(
             host="localhost",
             user="Peter",

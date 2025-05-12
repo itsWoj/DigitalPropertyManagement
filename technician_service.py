@@ -6,7 +6,6 @@ def complete_old_requests():
     with get_db_connection() as conn:
         cursor = conn.cursor(dictionary=True)
         
-        # Complete requests older than 1 day
         cursor.execute("""
             UPDATE MaintenanceRequests 
             SET Status = 'Completed', 
@@ -15,7 +14,6 @@ def complete_old_requests():
             AND CreatedAt < NOW() - INTERVAL 1 DAY
         """)
         
-        # Free up technicians from completed jobs
         cursor.execute("""
             UPDATE Technicians t
             JOIN MaintenanceRequests mr ON t.TechnicianID = mr.TechnicianID
@@ -65,7 +63,6 @@ def assign_technician(request_data):
             technician['TechnicianID']
         ))
         
-        # Mark technician as busy
         cursor.execute("""
             UPDATE Technicians 
             SET Status = 'Busy' 

@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 def complete_old_requests_and_free_technicians(cursor):
     """Mark old requests as completed and free up technicians"""
     try:
-        # Complete requests older than 1 day
         cursor.execute("""
             UPDATE MaintenanceRequests 
             SET Status = 'Completed', 
@@ -14,7 +13,6 @@ def complete_old_requests_and_free_technicians(cursor):
             AND CreatedAt < NOW() - INTERVAL 1 DAY
         """)
         
-        # Free up technicians from completed jobs
         cursor.execute("""
             UPDATE Technicians t
             JOIN MaintenanceRequests mr ON t.TechnicianID = mr.TechnicianID
@@ -23,7 +21,7 @@ def complete_old_requests_and_free_technicians(cursor):
             AND t.Status = 'Busy'
         """)
         
-        return cursor.rowcount  # Number of technicians freed
+        return cursor.rowcount  
         
     except Exception as e:
         raise Exception(f"Error completing old requests: {str(e)}")
@@ -34,7 +32,7 @@ def calculate_assignment_score(technician, request):
         return 0
 
     skillset_match = 1 if technician['Skillset'] == request['Skillset'] else 0
-    rating_score = technician.get('Rating', 3) / 5  # Default to 3 if no rating
+    rating_score = technician.get('Rating', 3) / 5
     zone_match = 1 if technician['Zone'] == request['Zone'] else 0
     urgency_score = request['Urgency'] / 3
 
@@ -48,7 +46,6 @@ def calculate_assignment_score(technician, request):
 
 def get_available_technicians(cursor, skillset, zone):
     """Get available technicians filtered by skillset and zone"""
-    # First try to complete old requests and free technicians
     freed_count = complete_old_requests_and_free_technicians(cursor)
     print(f"Freed {freed_count} technicians from completed jobs")
     
@@ -64,7 +61,6 @@ def get_available_technicians(cursor, skillset, zone):
     technicians = cursor.fetchall()
     
     if not technicians:
-        # Fallback to any available technician with matching skillset
         cursor.execute("""
             SELECT t.*, u.FirstName, u.LastName
             FROM Technicians t
@@ -85,9 +81,8 @@ def assign_technician(cursor, request):
     )
     
     if not technicians:
-        return None, 0  # No available technicians
+        return None, 0  
     
-    # Score and select best technician
     best_tech = max(
         technicians,
         key=lambda tech: calculate_assignment_score(tech, request)
@@ -107,7 +102,6 @@ def create_maintenance_request(tenant_id, skillset, description, zone, urgency):
     cursor = conn.cursor(dictionary=True)
     
     try:
-        # Validate tenant exists
         cursor.execute("SELECT TenantID FROM Tenants WHERE TenantID = %s", (tenant_id,))
         if not cursor.fetchone():
             raise ValueError(f"Tenant {tenant_id} does not exist")
@@ -119,7 +113,6 @@ def create_maintenance_request(tenant_id, skillset, description, zone, urgency):
             'Urgency': urgency
         }
         
-        # Assign technician (this will auto-complete old jobs first)
         tech_id, score = assign_technician(cursor, request_data)
         if not tech_id:
             raise Exception("No available technicians matching the requirements")
@@ -136,14 +129,12 @@ def create_maintenance_request(tenant_id, skillset, description, zone, urgency):
             tech_id, score, datetime.now()
         ))
         
-        # Update technician status
         cursor.execute("""
             UPDATE Technicians 
             SET Status = 'Busy' 
             WHERE TechnicianID = %s
         """, (tech_id,))
         
-        # Get created request
         cursor.execute("""
             SELECT r.*, u.FirstName, u.LastName
             FROM MaintenanceRequests r
@@ -165,7 +156,6 @@ def create_maintenance_request(tenant_id, skillset, description, zone, urgency):
 
 if __name__ == "__main__":
     try:
-        # Example usage - get a valid tenant ID first
         conn = mysql.connector.connect(
             host="localhost",
             user="Peter",
@@ -181,7 +171,6 @@ if __name__ == "__main__":
         if not valid_tenant:
             raise Exception("No tenants found in database")
         
-        # Create request
         request = create_maintenance_request(
             tenant_id=valid_tenant['TenantID'],
             skillset='Plumbing',
